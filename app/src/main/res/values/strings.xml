@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="generate">Button</string>
+    <string name="body">Body of the news</string>
+</resources>
