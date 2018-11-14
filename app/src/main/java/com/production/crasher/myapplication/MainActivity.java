@@ -20,27 +20,22 @@ import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private ProgressDialog mProgressDialog;
     private String url = "https://thehackernews.com/";
-    private String image;
     private ArrayList<String> newsAuthor = new ArrayList<>();
-    private ArrayList<String> newsDate = new ArrayList<>();
     private ArrayList<String> newsTitle = new ArrayList<>();
-    private ArrayList newsImage = new ArrayList();
-
+    private ArrayList<String> newsUrl = new ArrayList<>();
+    private List<String> listData = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         new Description().execute();
-    }
-
-    public void onClick(View v){
-
     }
 
     private class Description extends AsyncTask<Void, Void, Void> {
@@ -71,23 +66,16 @@ public class MainActivity extends AppCompatActivity {
                     Elements mElementAuthorName = mBlogDocument.select("div[class=item-label]").select("span").eq(i);
                     String mAuthorName = mElementAuthorName.text();
 
-                    Elements mElementBlogUploadDate = mBlogDocument.select("div[class=home-img clear]").select("div").eq(i);
-                    String mBlogUploadDate = mElementBlogUploadDate.text();
-
                     Elements mElementBlogTitle = mBlogDocument.select("h2[class=home-title]").eq(i);
                     String mBlogTitle = mElementBlogTitle.text();
 
-                    newsAuthor.add(mAuthorName);
-                    newsDate.add(mBlogUploadDate);
-                    newsTitle.add(mBlogTitle);
-                }
+                    Elements mElementUrl = mBlogDocument.select("a.story-link").eq(i);
+                    String mUrl = mElementUrl.attr("abs:href");
 
-                /*Elements img = mBlogDocument.getElementsByTag("img");
-                for (Element elem: img){
-                    image = elem.absUrl("src");
-                    newsImage.add(image);
+                    newsAuthor.add(mAuthorName);
+                    newsTitle.add(mBlogTitle);
+                    newsUrl.add(mUrl);
                 }
-                Log.d("images links", newsImage.toString());*/
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -98,9 +86,8 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Void result) {
             // Set description into TextView
 
-            RecyclerView mRecyclerView = (RecyclerView)findViewById(R.id.act_recyclerview);
-
-            DataAdapter mDataAdapter = new DataAdapter(MainActivity.this, newsTitle, newsAuthor, newsDate);
+            RecyclerView mRecyclerView = findViewById(R.id.act_recyclerview);
+            DataAdapter mDataAdapter = new DataAdapter(MainActivity.this, newsTitle, newsAuthor, newsUrl);
             RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
             mRecyclerView.setLayoutManager(mLayoutManager);
             mRecyclerView.setAdapter(mDataAdapter);
