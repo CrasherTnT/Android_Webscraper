@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 import com.baoyz.widget.PullRefreshLayout;
 
@@ -23,12 +22,15 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog mProgressDialog;
     private String[] resourceUrl = {"https://thehackernews.com/",
                                     "https://www.reuters.com/news/archive/cybersecurity",
-                                    "https://www.securitymagazine.com/topics/2236-cyber-security-news"
+                                    "https://www.securitymagazine.com/topics/2236-cyber-security-news",
+                                    "https://www.csoonline.com/news/",
+                                    "https://www.infosecurity-magazine.com/news/",
+                                    "https://www.helpnetsecurity.com/view/news/"
                                     };
     private ArrayList<String> newsTitle = new ArrayList<>();
     private ArrayList<String> newsUrl = new ArrayList<>();
+    private ArrayList<String> newsImage = new ArrayList<>();
     private PullRefreshLayout swipeRefreshLayout;
-
 
 
     @Override
@@ -70,56 +72,41 @@ public class MainActivity extends AppCompatActivity {
                 for (int urlCount=0; urlCount < resourceUrl.length; urlCount++){
                     String randomUrl = resourceUrl[urlCount];
                     Document mBlogDocument = Jsoup.connect(randomUrl).get();
-                    Log.d("url",randomUrl);
 
-                    if (randomUrl == resourceUrl[0]){
-                        //2nd URL
-                        Elements mElementDataSize = mBlogDocument.select("div[class=clear home-right]");
-                        int mElementSize = mElementDataSize.size() - 7;
-                        for (int i = 0; i < mElementSize; i++) {
-
-                            Elements mElementBlogTitle = mBlogDocument.select("h2[class=home-title]").eq(i);
-                            String mBlogTitle = mElementBlogTitle.text();
-
-                            Elements mElementUrl = mBlogDocument.select("a.story-link").eq(i);
-                            String mUrl = mElementUrl.attr("abs:href");
-
-                            newsTitle.add(mBlogTitle);
-                            newsUrl.add(mUrl);
-                        }
+                    if (randomUrl == resourceUrl[0]) {
+                        firstResource(mBlogDocument); //1st URL
+                        //This resource (The Hacker News) encoded their images using base64...
+                        // I'm still finding a solution to get the raw url but for now I put a temporary image
                     }
-
-                    else if(randomUrl == resourceUrl[1]){
-                        //1st URL
-                        Elements mElementDataSize = mBlogDocument.select("article[class=story]");
-                        int mElementSize = mElementDataSize.size()-7;
-
-                        for (int a = 0; a < mElementSize; a++ ){
-                            Elements mNewsUrl = mBlogDocument.select("div[class=story-content]").select("a").eq(a);
-                            Elements mNewsTitle = mBlogDocument.select("div[class=story-content]").select("h3").eq(a);
-
-                            String mTitle = mNewsTitle.text();
-                            String mUrl = mNewsUrl.attr("abs:href");
-
-                            newsTitle.add(mTitle);
-                            newsUrl.add(mUrl);
-                        }
+                    else if (randomUrl == resourceUrl[1]) {
+                        secondResource(mBlogDocument); //2nd URL
                     }
-                    else if (randomUrl == resourceUrl[2]){
-                        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
-
-                        int mElementSize = mElementDataSize.size();
-                        for (int a = 0; a < mElementSize; a++) {
-                            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(a);
-                            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(a);
-
-                            String mTitle = mNewsTitle.attr("title");
-                            String mUrl = mNewsUrl.attr("abs:href");
-
-                            newsTitle.add(mTitle);
-                            newsUrl.add(mUrl);
-                        }
+                    else if (randomUrl == resourceUrl[2]) {
+                        thirdResource(mBlogDocument); //3rd URL
                     }
+                    /*
+                    else if (randomUrl == resourceUrl[3]){
+                        fourthResource(mBlogDocument);
+                    }
+                    else if (randomUrl == resourceUrl[4]){
+                        fifthResource(mBlogDocument);
+                    }
+                    else if (randomUrl == resourceUrl[5]){
+                        sixthResource(mBlogDocument);
+                    }
+                    else if (randomUrl == resourceUrl[6]){
+                        seventhResource(mBlogDocument);
+                    }
+                    else if (randomUrl == resourceUrl[7]){
+                        eightResource(mBlogDocument);
+                    }
+                    else if (randomUrl == resourceUrl[8]){
+                        ninethResource(mBlogDocument);
+                    }
+                    else if (randomUrl == resourceUrl[9]){
+                        tenthResource(mBlogDocument);
+                    }
+                    */
                 }
             }
             catch (IOException e) {
@@ -133,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             // Set description into TextView
 
             RecyclerView mRecyclerView = findViewById(R.id.act_recyclerview);
-            DataAdapter mDataAdapter = new DataAdapter(MainActivity.this, newsTitle, newsUrl);
+            DataAdapter mDataAdapter = new DataAdapter(MainActivity.this, newsTitle, newsUrl, newsImage);
             RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
             mRecyclerView.setLayoutManager(mLayoutManager);
             mRecyclerView.setAdapter(mDataAdapter);
@@ -142,4 +129,194 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void firstResource(Document mBlogDocument) {
+        Elements mElementDataSize = mBlogDocument.select("div[class=clear home-right]");
+        int mElementSize = mElementDataSize.size() - 7;
+        for (int i = 0; i < mElementSize; i++) {
+
+            Elements mElementBlogTitle = mBlogDocument.select("h2[class=home-title]").eq(i);
+            Elements mElementUrl = mBlogDocument.select("a.story-link").eq(i);
+            Elements mElementImage = mBlogDocument.select("img").eq(i);
+
+            String mBlogTitle = mElementBlogTitle.text();
+            String mUrl = mElementUrl.attr("abs:href");
+            String mImage = mElementImage.attr("alt");
+
+            newsTitle.add(mBlogTitle);
+            newsUrl.add(mUrl);
+            newsImage.add("https://jeffreymannfinejewelers.com/static/images/temp-inventory-landing.jpg");
+        }
+    }
+    private void secondResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=story]");
+        int mElementSize = mElementDataSize.size()-7;
+        for (int i = 0; i < mElementSize; i++ ){
+
+            Elements mNewsUrl = mBlogDocument.select("div[class=story-content]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=story-content]").select("h3").eq(i);
+            Elements mElementImage = mBlogDocument.select("img").eq(i);
+
+            String mTitle = mNewsTitle.text();
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("org-src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+        }
+    }
+    private void thirdResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    /*
+    private void fourthResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("div[class=article]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=promo-headline]").select("h3").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=promo-headline]").select("h3").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=promo-image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.text();
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    private void fifthResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    private void sixthResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    private void seventhResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    private void eightResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    private void ninethResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    private void tenthResource(Document mBlogDocument){
+        Elements mElementDataSize = mBlogDocument.select("article[class=record article-summary]");
+        int mElementSize = mElementDataSize.size();
+
+        for (int i = 0; i < mElementSize; i++) {
+            Elements mNewsUrl = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mNewsTitle = mBlogDocument.select("div[class=image]").select("a").eq(i);
+            Elements mElementImage = mBlogDocument.select("div[class=image]").select("img").eq(i);
+
+            String mTitle = mNewsTitle.attr("title");
+            String mUrl = mNewsUrl.attr("abs:href");
+            String mImage = mElementImage.attr("src");
+
+            newsTitle.add(mTitle);
+            newsUrl.add(mUrl);
+            newsImage.add(mImage);
+
+        }
+    }
+    */
 }
