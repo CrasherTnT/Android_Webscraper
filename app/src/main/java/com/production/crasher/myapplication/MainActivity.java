@@ -15,6 +15,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.widget.TextView;
 
 import com.baoyz.widget.PullRefreshLayout;
 
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> newsImage = new ArrayList<>();
     private PullRefreshLayout swipeRefreshLayout;
     long startTime = 0;
-    private String stringTimer;
+    private TextView stringTimer;
 
     Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             int minutes = seconds / 60;
             seconds = seconds % 60;
 
-            stringTimer = String.format("%d:%02d", minutes, seconds);
+            stringTimer.setText(String.format("%d" , seconds));
 
             timerHandler.postDelayed(this, 500);
         }
@@ -77,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
                 }, 2000);
             }
         });
+        stringTimer = findViewById(R.id.timer);
+        timerHandler.postDelayed(timerRunnable, 0);
+
     }
 
     private class NewsGatherer extends AsyncTask<Void, Void, Void> {
@@ -209,15 +213,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startService() {
-        timerHandler.postDelayed(timerRunnable, 0);
         Intent serviceIntent = new Intent(this, ForegroundService.class);
-        serviceIntent.putExtra("inputExtra", stringTimer);
+        serviceIntent.putExtra("inputExtra", "Updating News...");
 
         ContextCompat.startForegroundService(this, serviceIntent);
-    }
-
-    public void stopService() {
-        Intent serviceIntent = new Intent(this, ForegroundService.class);
-        stopService(serviceIntent);
     }
 }
