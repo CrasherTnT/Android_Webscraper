@@ -1,13 +1,16 @@
 package com.production.crasher.myapplication;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
@@ -41,25 +44,6 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> newsUrl = new ArrayList<>();
     private ArrayList<String> newsImage = new ArrayList<>();
     private PullRefreshLayout swipeRefreshLayout;
-    long startTime = 0;
-    private String stringTimer;
-
-    Handler timerHandler = new Handler();
-    Runnable timerRunnable = new Runnable() {
-
-        @Override
-        public void run() {
-            long millis = System.currentTimeMillis() - startTime;
-            int seconds = (int) (millis / 1000);
-            int minutes = seconds / 60;
-            seconds = seconds % 60;
-
-            stringTimer = String.format("%d:%02d", minutes, seconds);
-
-            timerHandler.postDelayed(this, 500);
-        }
-    };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,15 +181,25 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-        NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_background))
-                .setContentTitle(mTitle)
-                .setContentText(mUrl)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID, "Hackuna News", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(serviceChannel);
+        }
+        Bitmap myBit = BitmapFactory.decodeResource(this.getResources(), R.drawable.thn);
+
+        NotificationCompat.Builder nb= new NotificationCompat.Builder(this, CHANNEL_ID);
+        nb.setSmallIcon(R.drawable.logo);
+        nb.setContentTitle(mTitle);
+        nb.setContentIntent(pendingIntent);
+        nb.setAutoCancel(true);
+        nb.setLargeIcon(myBit);
+
+        NotificationCompat.BigPictureStyle s = new NotificationCompat.BigPictureStyle().bigPicture(myBit).bigLargeIcon(null);
+        s.setSummaryText(mUrl);
+        nb.setStyle(s);
+
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(2, notifBuilder.build());
+        notificationManager.notify(2, nb.build());
     }
 }
