@@ -11,11 +11,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.widget.TextView;
 
 import com.baoyz.widget.PullRefreshLayout;
 
@@ -25,6 +23,9 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
+import static com.production.crasher.myapplication.App.CHANNEL_ID;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> newsImage = new ArrayList<>();
     private PullRefreshLayout swipeRefreshLayout;
     long startTime = 0;
-    private TextView stringTimer;
+    private String stringTimer;
 
     Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             int minutes = seconds / 60;
             seconds = seconds % 60;
 
-            stringTimer.setText(String.format("%d" , seconds));
+            stringTimer = String.format("%d:%02d", minutes, seconds);
 
             timerHandler.postDelayed(this, 500);
         }
@@ -78,9 +79,6 @@ public class MainActivity extends AppCompatActivity {
                 }, 2000);
             }
         });
-        stringTimer = findViewById(R.id.timer);
-        timerHandler.postDelayed(timerRunnable, 0);
-
     }
 
     private class NewsGatherer extends AsyncTask<Void, Void, Void> {
@@ -91,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             mProgressDialog.setTitle("Hackuna News");
             mProgressDialog.setMessage("Loading...");
             mProgressDialog.setIndeterminate(false);
-            startService();
             mProgressDialog.show();
         }
 
@@ -200,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-        NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder notifBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_background))
@@ -210,12 +207,5 @@ public class MainActivity extends AppCompatActivity {
                 .setAutoCancel(true);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(2, notifBuilder.build());
-    }
-
-    public void startService() {
-        Intent serviceIntent = new Intent(this, ForegroundService.class);
-        serviceIntent.putExtra("inputExtra", "Updating News...");
-
-        ContextCompat.startForegroundService(this, serviceIntent);
     }
 }
