@@ -1,23 +1,20 @@
 package com.production.crasher.myapplication;
 
-import android.app.IntentService;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
-import android.os.ResultReceiver;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -25,12 +22,13 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.production.crasher.myapplication.App.CHANNEL_ID;
 
-public class NewsService extends IntentService {
+public class SensorService extends Service {
 
-    private ProgressDialog mProgressDialog;
     private String[] resourceUrl = {"https://thehackernews.com/",
             "https://www.reuters.com/news/archive/cybersecurity",
             "https://www.securitymagazine.com/topics/2236-cyber-security-news",
@@ -42,56 +40,72 @@ public class NewsService extends IntentService {
     private ArrayList<String> newsUrl = new ArrayList<>();
     private ArrayList<String> newsImage = new ArrayList<>();
 
-    public NewsService(){
-        super("News Service");
+
+    public int counter=0;
+    public SensorService(Context applicationContext) {
+        super();
+        Log.i("HERE", "here I am!");
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.v("News", "News service has started");
+    public SensorService() {
     }
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
+    public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        startTimer();
         return START_STICKY;
-        /* Return this, if the application is terminated
-        * it re-executes the service*/
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i("EXIT", "ondestroy!");
+        Intent broadcastIntent = new Intent(this, SensorRestarterBroadcastReceiver.class);
 
+        sendBroadcast(broadcastIntent);
+        stoptimertask();
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent == null){
-            for (int i= 0; i < 5; i++){
+    private Timer timer;
+    private TimerTask timerTask;
+    long oldTime=0;
+    public void startTimer() {
+        //set a new Timer
+        timer = new Timer();
+
+        //initialize the TimerTask's job
+        initializeTimerTask();
+
+        //schedule the timer, to wake up every 1 second
+        timer.schedule(timerTask, 0, 300000); //
+    }
+
+    /**
+     * it sets the timer to print the counter every x seconds
+     */
+    public void initializeTimerTask() {
+        timerTask = new TimerTask() {
+            public void run() {
                 doInBackground();
-                Log.v("Countering", "null" + String.valueOf(i));
-                try{
-                    Thread.sleep(1000);
-                }
-                catch(Exception e){
-
-                }
+                Log.i("in timer", "in timer ++++  "+ (counter++));
             }
-            return;
+        };
+    }
+
+    /**
+     * not needed
+     */
+    public void stoptimertask() {
+        //stop the timer, if it's not already null
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
         }
+    }
 
-        ResultReceiver receiver = intent.getParcelableExtra("receiver");
-        for (int i= 0; i < 5; i++){
-            doInBackground();
-            try{
-                Thread.sleep(1000);
-            }
-            catch(Exception e){
-
-            }
-        }
-        Bundle bundle = new Bundle();
-        bundle.putStringArrayList("newsTitle", newsTitle);
-        bundle.putStringArrayList("newsImage", newsImage);
-        bundle.putStringArrayList("newsUrl", newsUrl);
-
-        receiver.send(1234, bundle);
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     protected void doInBackground() {
@@ -114,7 +128,6 @@ public class NewsService extends IntentService {
 
                 }
             }
-            hackunaNotification(newsUrl.get(0), newsTitle.get(0));
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -136,6 +149,7 @@ public class NewsService extends IntentService {
             newsTitle.add(mTitle);
             newsUrl.add(mUrl);
             newsImage.add("https://1.bp.blogspot.com/-AaptImXE5Y4/WzjvqBS8HtI/AAAAAAAAxSs/BcCIwpWJszILkuEbDfKZhxQJwOAD7qV6ACLcBGAs/s728-e100/the-hacker-news.jpg");
+            Log.v("Debug", mTitle);
         }
     }
     private void secondResource(Document mBlogDocument){
@@ -154,6 +168,8 @@ public class NewsService extends IntentService {
             newsTitle.add(mTitle);
             newsUrl.add(mUrl);
             newsImage.add("https://1.bp.blogspot.com/-AaptImXE5Y4/WzjvqBS8HtI/AAAAAAAAxSs/BcCIwpWJszILkuEbDfKZhxQJwOAD7qV6ACLcBGAs/s728-e100/the-hacker-news.jpg");
+            Log.v("Debug", mTitle);
+
         }
     }
     private void thirdResource(Document mBlogDocument){
@@ -172,7 +188,7 @@ public class NewsService extends IntentService {
             newsTitle.add(mTitle);
             newsUrl.add(mUrl);
             newsImage.add(mImage);
-
+            Log.v("Debug", mTitle);
         }
     }
     public void hackunaNotification(String mUrl, String mTitle){
@@ -201,7 +217,4 @@ public class NewsService extends IntentService {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(2, nb.build());
     }
-
-
-
 }

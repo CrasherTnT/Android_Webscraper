@@ -1,5 +1,6 @@
 package com.production.crasher.myapplication;
 
+import android.app.ActivityManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -37,11 +38,27 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog mProgressDialog;
     private PullRefreshLayout swipeRefreshLayout;
 
+    Intent mServiceIntent;
+    private SensorService mSensorService;
+    Context ctx;
+    public Context getCtx() {
+        return ctx;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ctx = this;
+        setContentView(R.layout.activity_main);
+        mSensorService = new SensorService(getCtx());
+        mServiceIntent = new Intent(getCtx(), mSensorService.getClass());
+        if (!isMyServiceRunning(mSensorService.getClass())) {
+            startService(mServiceIntent);
+        }
+
+/*
         NewsReceiver receiver = new NewsReceiver(new NewsData());
         Intent intent = new Intent(this, NewsService.class);
         intent.putExtra("receiver", receiver);
@@ -61,8 +78,31 @@ public class MainActivity extends AppCompatActivity {
                 }, 2000);
             }
         });
+*/
     }
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        stopService(mServiceIntent);
+        Log.i("MAINACT", "onDestroy!");
+        super.onDestroy();
+
+    }
+}
+/*
     public class NewsData {
         public void displayMessage(int resultCode, Bundle resultData) {
             ArrayList<String> newsTitle = resultData.getStringArrayList("newsTitle");
@@ -84,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-/*
+
     private class NewsGatherer extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {

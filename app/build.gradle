@@ -30,4 +30,5 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:26.1.0'
     implementation 'com.baoyz.pullrefreshlayout:library:1.2.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'android.arch.work:work-runtime:1.0.0-alpha10'
 }

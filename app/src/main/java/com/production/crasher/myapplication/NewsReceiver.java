@@ -1,4 +1,4 @@
-package com.production.crasher.myapplication;
+/*package com.production.crasher.myapplication;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -18,3 +18,4 @@ public class NewsReceiver extends ResultReceiver {
         data.displayMessage(resultCode,resultData);
     }
 }
+*/
