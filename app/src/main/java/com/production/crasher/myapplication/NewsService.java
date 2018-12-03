@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -13,6 +14,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,11 +26,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.production.crasher.myapplication.App.CHANNEL_ID;
 
-public class NewsService extends IntentService {
+public class NewsService extends Service {
 
     private ProgressDialog mProgressDialog;
     private String[] resourceUrl = {"https://thehackernews.com/",
@@ -42,64 +47,52 @@ public class NewsService extends IntentService {
     private ArrayList<String> newsUrl = new ArrayList<>();
     private ArrayList<String> newsImage = new ArrayList<>();
 
-    public NewsService(){
-        super("News Service");
-    }
+    Timer timer = new Timer();
+    MyTimerTask timerTask;
+    ResultReceiver resultReceiver;
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.v("News", "News service has started");
-    }
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
-        super.onStartCommand(intent, flags, startId);
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        resultReceiver = intent.getParcelableExtra("receiver");
+
+        timerTask = new MyTimerTask();
+        timer.scheduleAtFixedRate(timerTask, 1000, 1000);
         return START_STICKY;
-        /* Return this, if the application is terminated
-        * it re-executes the service*/
-
     }
-
     @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent == null){
-            for (int i= 0; i < 5; i++){
-                doInBackground();
-                Log.v("Countering", "null" + String.valueOf(i));
-                try{
-                    Thread.sleep(1000);
-                }
-                catch(Exception e){
-
-                }
-            }
-            return;
-        }
-
-        ResultReceiver receiver = intent.getParcelableExtra("receiver");
-        for (int i= 0; i < 5; i++){
-            doInBackground();
-            try{
-                Thread.sleep(1000);
-            }
-            catch(Exception e){
-
-            }
-        }
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        timer.cancel();
         Bundle bundle = new Bundle();
-        bundle.putStringArrayList("newsTitle", newsTitle);
-        bundle.putStringArrayList("newsImage", newsImage);
-        bundle.putStringArrayList("newsUrl", newsUrl);
-
-        receiver.send(1234, bundle);
+        bundle.putString("end", "Timer Stopped....");
+        resultReceiver.send(200, bundle);
     }
 
-    protected void doInBackground() {
+    class MyTimerTask extends TimerTask
+    {
+        public MyTimerTask() {
+            Bundle bundle = new Bundle();
+            bundle.putString("start", "Timer Started....");
+            resultReceiver.send(100, bundle);
+        }
+        @Override
+        public void run() {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("s");
+            resultReceiver.send(Integer.parseInt(dateFormat.format(System.currentTimeMillis())), null);
+        }
+    }
+
+    protected void NewsGatherer() {
         try {
-            for (int urlCount=0; urlCount < resourceUrl.length; urlCount++){
+            for (int urlCount = 0; urlCount < resourceUrl.length; urlCount++) {
                 String randomUrl = resourceUrl[urlCount];
                 Document mBlogDocument = Jsoup.connect(randomUrl).get();
-                switch (randomUrl){
+                switch (randomUrl) {
                     case "https://thehackernews.com/":
                         firstResource(mBlogDocument);
                         break;
@@ -116,10 +109,10 @@ public class NewsService extends IntentService {
             }
             hackunaNotification(newsUrl.get(0), newsTitle.get(0));
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (Exception e) {
         }
     }
+
     private void firstResource(Document mBlogDocument) {
         Elements mElementDataSize = mBlogDocument.select("div[class=clear home-right]");
         int mElementSize = mElementDataSize.size() - 7;
@@ -203,5 +196,6 @@ public class NewsService extends IntentService {
     }
 
 
-
 }
+
+
