@@ -18,20 +18,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".NewsService"
-            android:exported="false"/>
-
-        <service
-            android:name=".SensorService"
-            android:enabled="true" >
-        </service>
-
-        <receiver
-            android:name=".SensorRestarterBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true"
-            android:label="RestartServiceWhenStopped">
-        </receiver>
     </application>
 
 </manifest>
